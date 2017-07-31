@@ -98,7 +98,8 @@ try {
 	}
 	if (init('action') == 'EtsParser') {
 		if (isset($_FILES['Knxproj'])){
-			ajax::success(eibd::ParserEtsFile($_FILES['Knxproj']['tmp_name']));
+			eibd::ParserEtsFile($_FILES['Knxproj']['tmp_name']);
+			ajax::success(cache::byKey('eibd::CreateNewGad')->getValue('[]'));
 		}
 	}
   	if (init('action') == 'getTemplate') {

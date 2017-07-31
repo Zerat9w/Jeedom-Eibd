@@ -21,6 +21,17 @@ class eibd extends eqLogic {
 		$this->setLogicalId(trim($this->getLogicalId()));    
 	}
 	public function postSave() {		
+		foreach($this-getCmd() as $cmd){
+			$cache = cache::byKey('eibd::CreateNewGad');
+			$value = json_decode($cache->getValue('[]'), true);
+			foreach ($value as $key => $val) {
+			       if ($val['AdresseGroupe'] == $cmd->getLogicalId()){
+				       unset($value[$key]);
+				       array_shift($value);
+			       }
+			}
+			cache::set('eibd::CreateNewGad', json_encode($value), 0);
+		}
 	}	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//                                                                                                                                               //

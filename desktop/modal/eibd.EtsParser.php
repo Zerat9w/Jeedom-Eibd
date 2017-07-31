@@ -22,7 +22,12 @@ if (!isConnect('admin')) {
 	$('#Knxproj').fileupload({
 		dataType: 'json',
 		replaceFileInput: false,
-		done: function (data) {
+		//done: function (data) {
+		success: function(data) {
+			if (data.state != 'ok') {
+				$('#div_alert').showAlert({message: data.result, level: 'danger'});
+				return;
+			}
 			$('#div_alert').showAlert({message: "Import ETS complet.</br>Vous pouvez commancer la configuration des equipements", level: 'success'});
 			$('.eqLogicAction[data-action=addByTemplate]').trigger('click');
 		}
