@@ -402,9 +402,6 @@ class eibd extends eqLogic {
 						$option=$Commande->getConfiguration('option');
 						$BusValue=Dpt::DptSelectDecode($dpt, $DataBus, $inverse,$option);
 						log::add('eibd', 'debug', $Commande->getHumanName().' => '.$BusValue);
-						//$Commande->setCollectDate(date('Y-m-d H:i:s'));
-						//$Commande->event($BusValue);
-						//$Commande->save();
 						if ($Commande->execCmd() != $Commande->formatValue($BusValue)) {
 							$Commande->event($BusValue);
 						}
@@ -741,6 +738,7 @@ class eibd extends eqLogic {
 		}
 		$cron->start();
 		$cron->run();
+		sleep(2);
 		self::InitInformation();
 	}
 	public static function deamon_stop() {
