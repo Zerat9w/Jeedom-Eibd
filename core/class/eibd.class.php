@@ -300,6 +300,7 @@ class eibd extends eqLogic {
 		$host=config::byKey('EibdHost', 'eibd');
 		$port=config::byKey('EibdPort', 'eibd');
 		$EibdConnexion = new EIBConnection($host,$port);
+		$EibdConnexion->setTimeout(5);
 		$addr = self::gaddrparse($addr);
 		if ($EibdConnexion->EIBOpenT_Group ($addr, 0) == -1)
 			throw new Exception(__('Erreur de connexion au Bus KNX', __FILE__));
@@ -308,7 +309,8 @@ class eibd extends eqLogic {
 		$data = pack ("n", $val);
 		$len = $EibdConnexion->EIBSendAPDU($data);
 		if ($len == -1)
-			throw new Exception(__('Impossible de lire la valeur', __FILE__));
+          	return false;
+			//throw new Exception(__('Impossible de lire la valeur', __FILE__));
 		$loop=0;
 		$return=null;
 		while (1){
@@ -316,9 +318,11 @@ class eibd extends eqLogic {
 			$src = new EIBAddr();
 			$len = $EibdConnexion->EIBGetAPDU_Src($data, $src);
 			if ($len == -1)	
-				throw new Exception(__('Impossible de lire la valeur', __FILE__));
+				return false;
+				//throw new Exception(__('Impossible de lire la valeur', __FILE__));
 			if ($len < 2)
-				throw new Exception(__('Paquet Invalide', __FILE__));
+				return false;
+				//throw new Exception(__('Paquet Invalide', __FILE__));
 			$buf = unpack("C*", $data->buffer);
 			if ($buf[1] & 0x3 || ($buf[2] & 0xC0) == 0xC0){
 				throw new Exception(__("Error: Unknown APDU: ".$buf[1]."X".$buf[2], __FILE__));
@@ -399,6 +403,11 @@ class eibd extends eqLogic {
 						$inverse=$Commande->getConfiguration('inverse');
 						log::add('eibd', 'debug', 'Lecture de '. $Commande->getHumanName().' sur le GAD '.$ga);
 						$DataBus=self::EibdRead($ga);
+                      	if($DataBus === false){
+							$Commande->setConfiguration('FlagInit',false);
+							$Commande->save();
+							continue;
+						}
 						$option=$Commande->getConfiguration('option');
 						$BusValue=Dpt::DptSelectDecode($dpt, $DataBus, $inverse,$option);
 						log::add('eibd', 'debug', $Commande->getHumanName().' => '.$BusValue);
