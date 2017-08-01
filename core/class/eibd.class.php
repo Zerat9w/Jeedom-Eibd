@@ -21,7 +21,7 @@ class eibd extends eqLogic {
 		$this->setLogicalId(trim($this->getLogicalId()));    
 	}
 	public function postSave() {		
-		foreach($this-getCmd() as $cmd){
+		foreach($this->getCmd() as $cmd){
 			$cache = cache::byKey('eibd::CreateNewGad');
 			$value = json_decode($cache->getValue('[]'), true);
 			foreach ($value as $key => $val) {
