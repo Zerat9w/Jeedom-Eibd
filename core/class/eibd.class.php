@@ -531,9 +531,9 @@ class eibd extends eqLogic {
 						//$Commande->setCollectDate(date('Y-m-d H:i:s'));
 						//$Commande->event($valeur);
 						//$Commande->save();					
-						if ($Commande->execCmd() != $Commande->formatValue($valeur)) {
+						//if ($Commande->execCmd() != $Commande->formatValue($valeur)) {
 							$Commande->event($valeur);
-						}
+						//}
 						$Commande->setCache('collectDate', date('Y-m-d H:i:s'));
 					}
 				}
@@ -625,16 +625,12 @@ class eibd extends eqLogic {
 		$return['state'] = 'nok';
 		switch(config::byKey('KnxSoft', 'eibd')){
 			case 'eibd':
-				if(file_exists('/etc/eibd/bcusdk_VERSION')&&file_exists('/etc/eibd/pthsem_VERSION')){
-					if(exec("cat /etc/eibd/bcusdk_VERSION")=="v0.0.5.1" && exec("cat /etc/eibd/pthsem_VERSION")=="v2.0.8.1")
-						$return['state'] = 'ok';
-				}
+            			if(exec("command -v eibd") !='')
+					$return['state'] = 'ok';
 			break;
 			case 'knxd':
-				if(file_exists('/etc/eibd/knxd_VERSION')){
-					if(exec("cat /etc/eibd/knxd_VERSION")=="v0.10")
-						$return['state'] = 'ok';
-				}
+           			if(exec("command -v knxd") !='')
+					$return['state'] = 'ok';
 			break;
 			default:
 				$return['state'] = 'ok';
@@ -932,9 +928,9 @@ class eibdCmd extends cmd {
 					//$Listener->setConfiguration('doNotRepeatEvent', 1);
 					//$Listener->event($BusValue);
 					//$Listener->save();
-					if ($Listener->execCmd() != $Listener->formatValue($BusValue)) {
+					//if ($Listener->execCmd() != $Listener->formatValue($BusValue)) {
 						$Listener->event($BusValue);
-					}
+					//}
 					$Listener->setCache('collectDate', date('Y-m-d H:i:s'));
 				}
 			break;
@@ -947,9 +943,9 @@ class eibdCmd extends cmd {
 				//$this->setConfiguration('doNotRepeatEvent', 1);
 				//$this->event($BusValue);
 				//$this->save();
-				if ($this->execCmd() != $this->formatValue($BusValue)) {
+				//if ($this->execCmd() != $this->formatValue($BusValue)) {
 					$this->event($BusValue);
-				}
+				//}
 				$this->setCache('collectDate', date('Y-m-d H:i:s'));
 			break;
 		}

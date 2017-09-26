@@ -206,13 +206,25 @@ $('body').on( 'click','.bt_read', function() {
 	});
 });
 $('body').on('keyup','.cmdAttr[data-l1key=logicalId]', function() {
-	/*var Gad=$(this).val().split('/');
-	if($.isNumeric(Gad[Gad.length - 1])){
-		if(Gad[Gad.length - 1]==0 || Gad[Gad.length - 1]>254)
-			$(this).val($(this).val()+'/');
-	}
-	if($(this).val().substr(-2) =='//' || Gad.length>3)
-		$(this).val($(this).val().substring(0,$(this).val().length-1));*/
+	var valeur= $(this).val();
+	jeedom.config.load({
+		plugin: 'eibd',
+		configuration: 'level',
+		success: function (data) {
+			var Gad=valeur.split('/');
+			if(Gad.length < parseInt(data.result)){
+				if($.isNumeric(Gad[Gad.length - 1])){
+					if(Gad[Gad.length - 1]==0 || Gad[Gad.length - 1]+100>254)
+						valeur+='/';
+				}
+			}
+			if(valeur.substr(-2) =='//')
+				valeur.substring(0,-1);
+			if(valeur.substr(-1) =='//' && Gad.length == parseInt(data.result))
+				valeur.substring(0,-1);
+		}
+	});
+	$(this).val(valeur);
 }); 
 $('body').on('change','.cmdAttr[data-l1key=configuration][data-l2key=KnxObjectType]', function() {
 	DptOption($(this).val(),$(this).closest('.cmd').find('.option'));

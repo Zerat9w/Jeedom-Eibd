@@ -163,15 +163,31 @@ class Dpt{
 				$data= array(($value>>24) & 0xFF, ($value>>16) & 0xFF,($value>>8) & 0xFF,$value & 0xFF,$ValInfField->execCmd(),$StatusCommande->execCmd());
 				}
 			break;
-		case "235":
-			if ($dpt != "235.001"){
-				/*if ($value < 0)
-				   $value = (abs($value) ^ 0xffffffff) + 1 ; */
-				foreach(explode('|',$option["ActiveElectricalEnergy"]) as $tarif => $ActiveElectricalEnergy){
-					$value=cmd::byId(str_replace('#','',$ActiveElectricalEnergy));
-					$data= array(($value>>24) & 0xFF, ($value>>16) & 0xFF,($value>>8) & 0xFF,$value & 0xFF,$tarif,(0<< 1) & 0x02 | 0);
+			case "27":
+				foreach(explode('|',$option["Info"]) as $bit => $Info){
+					$value=cmd::byId(str_replace('#','',$Info))->execCmd();
+					if($bit < 8)
+						$data[0].=$value>>$bit;
+					elseif($bit < 16)
+						$data[1].=$value>>$bit;
+					if($value){
+						if($bit < 8)
+							$data[2].=0x01>>$bit;
+						elseif($bit < 16)
+							$data[3].=0x01>>$bit;
+					}
+						
 				}
-			}
+			break;
+			case "235":
+				if ($dpt != "235.001"){
+					/*if ($value < 0)
+					   $value = (abs($value) ^ 0xffffffff) + 1 ; */
+					foreach(explode('|',$option["ActiveElectricalEnergy"]) as $tarif => $ActiveElectricalEnergy){
+						$value=cmd::byId(str_replace('#','',$ActiveElectricalEnergy))->execCmd();
+						$data= array(($value>>24) & 0xFF, ($value>>16) & 0xFF,($value>>8) & 0xFF,$value & 0xFF,$tarif,(0<< 1) & 0x02 | 0);
+					}
+				}
 			break;
 			case "232":	
 				$data= self::html2rgb($value);
@@ -422,6 +438,22 @@ class Dpt{
 						}
 					}
 				break;
+			case "27":
+				if ($option != null){
+					for($byte=0;$byte<count($data);$byte++){
+						if ($option["Info"] !='')
+							$Info=explode('|',$option["Info"]);	
+						for($bit=0;$bit <= 0xFF;$bit++){
+							$bits=str_split($data[$byte],1);
+							$InfoCmd=cmd::byId(str_replace('#','',$Info[$bit]));
+							if (is_object($InfoCmd)){
+								log::add('eibd', 'debug', 'Nous allons mettre a jours l\'objet: '. $InfoCmd->getHumanName);
+								$InfoCmd->event($bits[$bit]);
+							}
+						}
+					}
+				}
+			break;
 			case "235":
 				if ($dpt == "235.001"){
 					$value = $data[5] & 0x01;  
@@ -434,7 +466,6 @@ class Dpt{
 					log::add('eibd', 'debug', 'La valeur du tarif est valide');	
 					if ($option != null){
 						if ($option["ActiveElectricalEnergy"] !=''){	
-						//if ($option["Tarif"] !=''){	
 							$ActiveElectricalEnergy=explode('|',$option["ActiveElectricalEnergy"]);
 							$Tarif=$data[4];
 							log::add('eibd', 'debug', 'Nous allons mettre a jours le tarif '. $Tarif);	
@@ -446,39 +477,10 @@ class Dpt{
 									$valeur = -(($valeur - 1) ^ 0xffffffff);  # invert twos complement    
 								log::add('eibd', 'debug', 'L\'objet '.$ActiveElectricalEnergyCommande->getName().' à été trouvé et vas etre mis a jours avec la valeur '. $valeur);	
 								$ActiveElectricalEnergyCommande->setCollectDate(date('Y-m-d H:i:s'));
-								//$ActiveElectricalEnergyCommande->setConfiguration('doNotRepeatEvent', 1);
 								$ActiveElectricalEnergyCommande->event($valeur);
 								$ActiveElectricalEnergyCommande->save();
 							}
 						}
-						//Mise a jours de l'objet Jeedom validityTarif
-						/*if ($option["validityTarif"] !='' )
-							{
-							$validityTarifCommande=cmd::byId(str_replace('#','',$option["validityTarif"]));
-							if (is_object($validityTarifCommande))
-								{
-								$valeur=($data[5]>>1) & 0x01;
-								log::add('eibd', 'debug', 'L\'objet '.$validityTarifCommande->getName().' à été trouvé et vas etre mis a jours avec la valeur '. $valeur);
-								$validityTarifCommande->setCollectDate(date('Y-m-d H:i:s'));
-								//$validityTarifCommande->setConfiguration('doNotRepeatEvent', 1);
-								$validityTarifCommande->event($valeur);
-								$validityTarifCommande->save();
-								}
-							}
-						//Mise a jours de l'objet Jeedom validityActiveElectricalEnergy
-						if ($option["validityActiveElectricalEnergy"] !='' )
-							{
-							$validityActiveElectricalEnergyCommande=cmd::byId(str_replace('#','',$option["validityActiveElectricalEnergy"]));		
-							if (is_object($validityActiveElectricalEnergyCommande))
-								{
-								$valeur=$data[5] & 0x01;
-								log::add('eibd', 'debug', 'L\'objet '.$validityActiveElectricalEnergyCommande->getName().' à été trouvé et vas etre mis a jours avec la valeur '. $valeur);
-								$validityActiveElectricalEnergyCommande->setCollectDate(date('Y-m-d H:i:s'));
-								//$validityActiveElectricalEnergyCommande->setConfiguration('doNotRepeatEvent', 1);
-								$validityActiveElectricalEnergyCommande->event($valeur);
-								$validityActiveElectricalEnergyCommande->save();
-								}
-							}*/
 					}
 				}
 			break;
@@ -2000,6 +2002,14 @@ class Dpt{
 				"Option" =>array(),
 				"Unite" =>"")),
 		"Other"=> array(
+			"27.001"=> array(
+				"Name"=>"Combined info On/Off",
+				"Valeurs"=>array(),
+				"InfoType"=>'binary',
+				"ActionType"=>'other',
+				"GenericType"=>"DONT",
+				"Option" =>array("Info"),
+				"Unite" =>""),
 			"235.001"=> array(
 				"Name"=>"Tarif ActiveEnergy",
 				"Valeurs"=>array(),
