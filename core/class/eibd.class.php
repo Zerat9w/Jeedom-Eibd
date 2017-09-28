@@ -914,12 +914,16 @@ class eibdCmd extends cmd {
 					case 'message':
 						$ActionValue = $_options['message'];
 					break;
+					case 'select':
+						$ActionValue = $_options['select'];
+					break;
 					case 'other':
 						$ActionValue =$this->getConfiguration('KnxObjectValue');
 						if (isset($Listener) && is_object($Listener) && $this->getConfiguration('KnxObjectValue') == "") 
 							$ActionValue =Dpt::OtherValue($dpt,$Listener->execCmd());
 					break;
 				}
+				log::add('eibd','debug', 'Valeur a envoyer '.$ActionValue);
 				$data= Dpt::DptSelectEncode($dpt, $ActionValue, $inverse,$option);
 				$BusValue=Dpt::DptSelectDecode($dpt, $data, $inverse,$option);
 				$WriteBusValue=eibd::EibdWrite($ga, $data);
