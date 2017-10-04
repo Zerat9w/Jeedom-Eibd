@@ -632,7 +632,7 @@ class eibd extends eqLogic {
            			if(exec("command -v knxd") !='')
 					$return['state'] = 'ok';
 			break;
-			default:
+			case 'manual':
 				$return['state'] = 'ok';
 			break;
 		}
@@ -659,24 +659,26 @@ class eibd extends eqLogic {
 	public static function deamon_info() {
 		$return = array();
 		$return['log'] = 'eibd';	
-		if(config::byKey('EibdPort', 'eibd')!=''&&config::byKey('EibdGad', 'eibd')!=''&&config::byKey('KNXgateway', 'eibd')!='')
-			$return['launchable'] = 'ok';
-		else
-			$return['launchable'] = 'nok';
+		$return['launchable'] = 'nok';
 		$return['state'] = 'nok';
 		switch(config::byKey('KnxSoft', 'eibd')){
 			case 'knxd':
 				$result=exec("ps aux | grep knxd | grep -v grep | awk '{print $2}'",$result);	
 				if($result!="")
 					$return['state'] = 'ok';
+				if(config::byKey('EibdPort', 'eibd')!=''&&config::byKey('EibdGad', 'eibd')!=''&&config::byKey('KNXgateway', 'eibd')!='')
+					$return['launchable'] = 'ok';
 			break;
 			case 'eibd':
 				$result=exec("ps aux | grep eibd | grep -v grep | awk '{print $2}'",$result);	
 				if($result!="")
 					$return['state'] = 'ok';
+				if(config::byKey('EibdPort', 'eibd')!=''&&config::byKey('EibdGad', 'eibd')!=''&&config::byKey('KNXgateway', 'eibd')!='')
+					$return['launchable'] = 'ok';
 			break;
-			default:
+			case 'manual':
 				$return['state'] = 'ok';
+				$return['launchable'] = 'ok';
 			break;
 		}
 		if($return['state'] == 'ok'){
@@ -694,6 +696,7 @@ class eibd extends eqLogic {
 			return;
 		log::remove('eibd');
 		self::deamon_stop();
+		$cmd = '';
 		switch(config::byKey('KnxSoft', 'eibd')){
 			case 'knxd':
 				$cmd = 'sudo knxd --daemon=/var/log/knx.log --pid-file=/var/run/knx.pid --eibaddr='.config::byKey('EibdGad', 'eibd').' --client-addrs='.config::byKey('EibdGad', 'eibd').':'.config::byKey('EibdNbAddr', 'eibd').' --Name=JeedomKnx -D -T -S --listen-tcp='.config::byKey('EibdPort', 'eibd').' -b';
@@ -702,7 +705,7 @@ class eibd extends eqLogic {
 				$cmd = 'sudo eibd --daemon=/var/log/knx.log --pid-file=/var/run/knx.pid --eibaddr='.config::byKey('EibdGad', 'eibd').' -D -T -S --listen-tcp='.config::byKey('EibdPort', 'eibd');			
 			break;
 		}
-		if(isset($cmd)){
+		if($cmd != ''){
 			switch(config::byKey('TypeKNXgateway', 'eibd')){
 				case 'ip':
 					$cmd .=' ip:';
